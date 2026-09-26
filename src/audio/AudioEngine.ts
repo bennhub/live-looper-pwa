@@ -522,12 +522,23 @@ export class AudioEngine {
     if (this.loopEpoch === null || state.masterLoopFrames === null) return null;
     const sampleRate = this.audioContext.sampleRate;
     const loopSeconds = state.masterLoopFrames / sampleRate;
-    const elapsed = wrapSeconds(this.audioContext.currentTime - this.loopEpoch, loopSeconds);
     const beatsPerBar = state.settings.timeSignature.beatsPerBar;
     const secPerBeat = secondsPerBeat(state.settings.bpm);
+    const totalBars = Math.max(1, Math.round(loopSeconds / (secPerBeat * beatsPerBar)));
+
+    // While paused, don't keep computing position from elapsed wall-clock
+    // time - nothing is actually advancing, so the progress bar/bar-beat
+    // readout would otherwise keep animating even though playback (and the
+    // audio itself) has stopped. Resuming always restarts from the top of
+    // the buffer (see play()), so "start of loop" is also the accurate
+    // preview of what resuming will do.
+    if (state.transport !== "playing" && state.transport !== "overdubbing") {
+      return { bar: 1, totalBars, beat: 1, beatsPerBar, progress: 0 };
+    }
+
+    const elapsed = wrapSeconds(this.audioContext.currentTime - this.loopEpoch, loopSeconds);
     const totalBeatsElapsed = Math.floor(elapsed / secPerBeat);
     const beat = totalBeatsElapsed % beatsPerBar;
-    const totalBars = Math.max(1, Math.round(loopSeconds / (secPerBeat * beatsPerBar)));
     const bar = Math.floor(totalBeatsElapsed / beatsPerBar) % totalBars;
     return {
       bar: bar + 1,
