@@ -1,0 +1,496 @@
+/* Dark, minimalist "hardware pedal" aesthetic - large high-contrast controls,
+   deliberately not a DAW-like layout. Fixed dark theme by design. */
+
+:root {
+  color-scheme: dark;
+  --bg: #0d0f14;
+  --surface: #171a21;
+  --surface-raised: #1f232c;
+  --border: #2a2f3a;
+  --text: #f2f4f8;
+  --text-dim: #9aa3b2;
+
+  --color-idle: #6b7280;
+  --color-count-in: #f5a524;
+  --color-recording: #ef4444;
+  --color-playing: #22c55e;
+  --color-overdubbing: #ff6a1a;
+  --color-stopped: #6b7280;
+
+  --radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+#app {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 16px 16px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+}
+
+/* ---------- header ---------- */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.app-header h1 {
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- transport ---------- */
+
+.transport {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--border);
+}
+
+.status-chip {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-idle) 25%, transparent);
+  color: var(--color-idle);
+}
+
+.transport[data-state="count-in"] .status-chip {
+  background: color-mix(in srgb, var(--color-count-in) 25%, transparent);
+  color: var(--color-count-in);
+}
+.transport[data-state="recording"] .status-chip {
+  background: color-mix(in srgb, var(--color-recording) 25%, transparent);
+  color: var(--color-recording);
+}
+.transport[data-state="playing"] .status-chip {
+  background: color-mix(in srgb, var(--color-playing) 25%, transparent);
+  color: var(--color-playing);
+}
+.transport[data-state="overdubbing"] .status-chip {
+  background: color-mix(in srgb, var(--color-overdubbing) 25%, transparent);
+  color: var(--color-overdubbing);
+}
+.transport[data-state="stopped"] .status-chip {
+  background: color-mix(in srgb, var(--color-stopped) 25%, transparent);
+  color: var(--color-stopped);
+}
+
+.bar-beat {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+
+.loop-progress {
+  width: 100%;
+  height: 8px;
+  background: var(--surface-raised);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.loop-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--color-playing);
+  transition: width 60ms linear;
+}
+
+.primary-btn {
+  width: 168px;
+  height: 168px;
+  border-radius: 50%;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #0d0f14;
+  background: var(--color-idle);
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 80ms ease;
+}
+
+.primary-btn:active {
+  transform: scale(0.97);
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.transport[data-state="idle"] .primary-btn {
+  background: var(--color-recording);
+  color: white;
+}
+.transport[data-state="count-in"] .primary-btn {
+  background: var(--color-count-in);
+}
+.transport[data-state="recording"] .primary-btn {
+  background: var(--color-recording);
+  color: white;
+  animation: pulse 1s infinite;
+}
+.transport[data-state="playing"] .primary-btn {
+  background: var(--color-playing);
+}
+.transport[data-state="overdubbing"] .primary-btn {
+  background: var(--color-overdubbing);
+}
+.transport[data-state="stopped"] .primary-btn {
+  background: var(--color-stopped);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-recording) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+
+.controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  width: 100%;
+}
+
+.control-btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.control-btn.small {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  min-height: 36px;
+}
+
+.control-btn.danger {
+  border-color: color-mix(in srgb, var(--color-recording) 60%, var(--border));
+  color: var(--color-recording);
+}
+
+.control-btn.overdub {
+  border-color: color-mix(in srgb, var(--color-overdubbing) 60%, var(--border));
+  color: var(--color-overdubbing);
+}
+
+.control-btn.toggle.active {
+  background: color-mix(in srgb, var(--color-playing) 30%, var(--surface-raised));
+  border-color: var(--color-playing);
+}
+
+.control-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.level-meter {
+  width: 100%;
+  height: 10px;
+  background: var(--surface-raised);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.level-meter-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--color-playing), var(--color-count-in), var(--color-recording));
+}
+
+/* ---------- mixer ---------- */
+
+.mixer {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mixer-empty {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.mixer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mixer-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px;
+  border-radius: 10px;
+  background: var(--surface-raised);
+}
+
+.mixer-name {
+  min-width: 90px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.mixer-volume {
+  flex: 1;
+  min-width: 100px;
+}
+
+/* ---------- settings panel ---------- */
+
+.settings-panel {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0;
+  width: min(480px, 92vw);
+  max-height: 88vh;
+}
+
+.settings-panel::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+}
+
+.settings-body {
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-body h3 {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settings-row label {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  flex: 1;
+}
+
+.inline-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bpm-value {
+  min-width: 72px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.segmented {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.segment-btn {
+  padding: 8px 12px;
+  border: none;
+  background: var(--surface-raised);
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.segment-btn.active {
+  background: var(--color-playing);
+  color: #0d0f14;
+  font-weight: 600;
+}
+
+.limitations-note {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  background: var(--surface-raised);
+  padding: 10px;
+  border-radius: 10px;
+}
+
+/* ---------- confirm dialog ---------- */
+
+.confirm-dialog {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  width: min(380px, 90vw);
+}
+
+.confirm-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.dialog-actions button {
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.dialog-actions button.danger {
+  background: var(--color-recording);
+  color: white;
+  border-color: var(--color-recording);
+}
+
+/* ---------- toast ---------- */
+
+.toast-container {
+  position: fixed;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+  width: min(420px, 92vw);
+}
+
+.toast {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.85rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.toast button {
+  border: none;
+  background: var(--color-playing);
+  color: #0d0f14;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+/* ---------- misc states ---------- */
+
+.unsupported {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--text-dim);
+}
+
+.resume-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 15, 20, 0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 900;
+  text-align: center;
+  padding: 16px;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 420px) {
+  .primary-btn {
+    width: 140px;
+    height: 140px;
+  }
+}
