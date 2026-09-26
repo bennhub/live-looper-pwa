@@ -603,18 +603,28 @@ input[type="range"]::-moz-range-thumb {
     min-width: 100%;
   }
 
-  /* Rows with a wide control (input device picker, segmented toggle) read
-     better stacked - label on its own line, control spanning full width -
-     than wrapped mid-row. */
-  .settings-row:has(.inline-controls),
-  .settings-row:has(.segmented) {
+  /* Every settings row stacks label-above-control at phone widths, full
+     width - unconditional (not `:has()`-gated) so it doesn't depend on
+     browser support for that selector, and explicit `width: 100%` rather
+     than relying only on flex stretch, since a <select> is a replaced
+     element some engines don't stretch correctly via align-items alone. */
+  .settings-row {
     flex-direction: column;
     align-items: stretch;
   }
 
+  .settings-row label {
+    min-width: 0;
+  }
+
   .settings-row .inline-controls,
-  .settings-row .segmented {
-    justify-content: stretch;
+  .settings-row .segmented,
+  .settings-row > button {
+    width: 100%;
+  }
+
+  .settings-body select {
+    width: 100%;
   }
 
   .mixer-volume {
