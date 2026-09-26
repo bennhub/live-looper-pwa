@@ -14,6 +14,7 @@ import {
   secondsPerBeat,
   wrapFrame,
 } from "./quantize";
+import { rampGain } from "./gainRamp";
 import { applyLatencyCompensation } from "./latency";
 
 function nextLayerId(): string {
@@ -147,7 +148,7 @@ export class AudioEngine {
 
   private applyMonitorSettings(): void {
     const { monitorEnabled, monitorVolume } = this.store.getState().settings;
-    this.monitorGain.gain.value = monitorEnabled ? monitorVolume : 0;
+    rampGain(this.monitorGain.gain, monitorEnabled ? monitorVolume : 0, this.audioContext);
   }
 
   // ------------------------------------------------------------ metronome

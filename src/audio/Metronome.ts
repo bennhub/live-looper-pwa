@@ -3,6 +3,8 @@
 // WAV export is guaranteed click-free by construction and volume changes
 // here can never affect recorded/exported audio.
 
+import { rampGain } from "./gainRamp";
+
 export class Metronome {
   private readonly audioContext: AudioContext;
   private readonly gainNode: GainNode;
@@ -14,7 +16,7 @@ export class Metronome {
   }
 
   setVolume(volume: number): void {
-    this.gainNode.gain.value = volume;
+    rampGain(this.gainNode.gain, volume, this.audioContext);
   }
 
   /** Schedules one click at the given audio-clock time. */

@@ -5,6 +5,8 @@
 // exactly at loop boundaries while every layer restarts at an identical,
 // shared audio-clock timestamp - zero relative drift between layers.
 
+import { rampGain } from "./gainRamp";
+
 export class LayerVoice {
   readonly gainNode: GainNode;
   private readonly audioContext: AudioContext;
@@ -18,7 +20,7 @@ export class LayerVoice {
   }
 
   setGain(gain: number, muted: boolean): void {
-    this.gainNode.gain.value = muted ? 0 : gain;
+    rampGain(this.gainNode.gain, muted ? 0 : gain, this.audioContext);
   }
 
   /** Schedules this layer's buffer to start at `time`, stopping any earlier voice first. */
