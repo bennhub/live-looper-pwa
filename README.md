@@ -3,9 +3,31 @@
 A live audio looper PWA for guitar and other instruments, built with the
 Web Audio API. Record a loop, it plays back with zero gap, and you stack
 overdubs on top — with continuous low-latency live monitoring, a metronome
-with count-in, Fixed Bar or Free Loop recording modes, undo/redo, and WAV
-export. Installable, works offline (the app shell — looping itself always
-needs a live microphone).
+that acts as a recording aid (count-in plus an optional click through the
+take itself, silent once the loop is just playing back), Fixed Bar or Free
+Loop recording modes, undo/redo, and WAV export. Installable, works offline
+(the app shell — looping itself always needs a live microphone).
+
+Dark, flat, minimalist UI: black background, transparent buttons with
+hot-pink borders, the Record button keeping the standard red — built
+mobile-first with 44px+ touch targets throughout.
+
+Repo: https://github.com/bennhub/live-looper-pwa
+
+## Features
+
+- Record → seamless loop → stack overdubs, with explicit (never automatic)
+  overdub triggering
+- Fixed Bar mode (pick a bar count, count-in, auto-stop exactly on the grid)
+  or Free Loop mode (manual stop, optional quantize-to-beat)
+- Undo / redo / clear overdubs / clear loop
+- Live instrument monitoring, independent of record/play state
+- Metronome with tap tempo and count-in
+- Per-layer mute / volume / reorder / delete
+- WAV export
+- Input device selection
+- Settings-only persistence by default; optional "save loop across reloads"
+- Installable PWA with an offline-capable app shell
 
 ## Getting started
 
