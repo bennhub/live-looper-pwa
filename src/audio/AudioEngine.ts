@@ -5,7 +5,7 @@ import { Metronome } from "./Metronome";
 import { LayerVoice } from "./LayerPlayer";
 import { RecorderNode } from "./recorderNode";
 import { TapTempo } from "./TapTempo";
-import { buildAudioConstraints } from "./devices";
+import { buildAudioConstraints, buildFallbackAudioConstraints } from "./devices";
 import {
   barsToFrames,
   fitToLength,
@@ -99,7 +99,17 @@ export class AudioEngine {
     this.sourceNode?.disconnect();
     this.recorder?.dispose();
 
-    this.micStream = await navigator.mediaDevices.getUserMedia(buildAudioConstraints(deviceId));
+    try {
+      this.micStream = await navigator.mediaDevices.getUserMedia(buildAudioConstraints(deviceId));
+    } catch (err) {
+      // Some browsers/OS versions (iOS Safari has had documented issues
+      // here) can reject the request outright over the advanced
+      // echoCancellation/noiseSuppression/autoGainControl hints, even
+      // though none of them are exact constraints. Retry with the minimal,
+      // maximally-compatible set before giving up and surfacing an error.
+      console.warn("[AudioEngine] getUserMedia failed with preferred constraints, retrying with defaults", err);
+      this.micStream = await navigator.mediaDevices.getUserMedia(buildFallbackAudioConstraints(deviceId));
+    }
     this.sourceNode = this.audioContext.createMediaStreamSource(this.micStream);
     this.sourceNode.connect(this.analyser);
     this.sourceNode.connect(this.monitorGain);

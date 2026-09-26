@@ -26,3 +26,17 @@ export function buildAudioConstraints(deviceId: string | null): MediaStreamConst
     video: false,
   };
 }
+
+/**
+ * Minimal, maximally-compatible fallback if the preferred constraints above
+ * are rejected outright - some browsers/OS versions (iOS Safari has had
+ * documented issues here) can refuse the request entirely rather than just
+ * ignoring an audio-processing hint they don't support, even though none of
+ * these are exact constraints.
+ */
+export function buildFallbackAudioConstraints(deviceId: string | null): MediaStreamConstraints {
+  return {
+    audio: deviceId ? { deviceId: { exact: deviceId } } : true,
+    video: false,
+  };
+}

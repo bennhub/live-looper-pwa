@@ -1,6 +1,7 @@
 import type { AudioEngine } from "../audio/AudioEngine";
 import type { LooperStore } from "../state/store";
 import type { TransportState } from "../state/types";
+import { describeMicError } from "../audio/micErrors";
 import { confirmDialog } from "./dialogs";
 import { el, setDisabled, setText, toggleClass } from "./render";
 import { runCatching } from "./toast";
@@ -63,13 +64,10 @@ export function createTransportView(engine: AudioEngine, store: LooperStore): HT
   root.append(statusChip, bpmDisplay, barBeat, progress, primaryBtn, controls, toggles, levelMeter);
 
   primaryBtn.addEventListener("click", () => {
-    runCatching(
-      () => primaryActionFor(store.getState().transport)?.run(engine),
-      "Microphone access was denied or unavailable. Check permissions and try again.",
-    );
+    runCatching(() => primaryActionFor(store.getState().transport)?.run(engine), describeMicError);
   });
   overdubBtn.addEventListener("click", () => {
-    runCatching(() => engine.startOverdub(), "Couldn't start overdub — check microphone access.");
+    runCatching(() => engine.startOverdub(), describeMicError);
   });
   undoBtn.addEventListener("click", () => engine.undoOverdub());
   clearBtn.addEventListener("click", () => {

@@ -1,4 +1,5 @@
 import type { AudioEngine } from "../audio/AudioEngine";
+import { describeMicError } from "../audio/micErrors";
 import type { LooperStore } from "../state/store";
 import { primaryActionFor } from "./TransportView";
 import { runCatching } from "./toast";
@@ -21,14 +22,11 @@ export function bindKeyboardShortcuts(engine: AudioEngine, store: LooperStore, o
       case " ":
       case "Spacebar":
         event.preventDefault();
-        runCatching(
-          () => primaryActionFor(store.getState().transport)?.run(engine),
-          "Microphone access was denied or unavailable. Check permissions and try again.",
-        );
+        runCatching(() => primaryActionFor(store.getState().transport)?.run(engine), describeMicError);
         break;
       case "o":
       case "O":
-        runCatching(() => engine.startOverdub(), "Couldn't start overdub — check microphone access.");
+        runCatching(() => engine.startOverdub(), describeMicError);
         break;
       case "m":
       case "M":

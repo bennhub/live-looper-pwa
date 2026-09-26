@@ -17,13 +17,18 @@ export interface ToastAction {
 }
 
 /** Runs an action, showing a toast instead of an unhandled rejection on failure. */
-export function runCatching(action: () => Promise<void> | void, errorMessage = "Something went wrong."): void {
+export function runCatching(
+  action: () => Promise<void> | void,
+  errorMessage: string | ((err: unknown) => string) = "Something went wrong.",
+): void {
   void (async () => {
     try {
       await action();
     } catch (err) {
       console.error(err);
-      showToast(errorMessage);
+      // Longer dismiss time than the default - these messages (especially
+      // the mic-permission ones) carry actual instructions worth reading.
+      showToast(typeof errorMessage === "function" ? errorMessage(err) : errorMessage, undefined, 12000);
     }
   })();
 }
