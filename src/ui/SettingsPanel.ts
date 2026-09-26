@@ -153,10 +153,12 @@ export function createSettingsPanel(engine: AudioEngine, store: LooperStore): Se
   });
 
   const limitationsNote = el("p", { class: "limitations-note" }, [
-    "Live monitoring latency depends on your OS/browser audio backend — a dedicated audio interface with direct " +
-      "hardware monitoring will always beat browser monitoring. Built-in laptop mic/speakers or shared-mode audio " +
-      "on Windows commonly add 40–100ms+; iOS Safari has its own buffering quirks. For guitar/vocal use, an " +
-      "external audio interface is strongly recommended.",
+    "Live monitoring always has some round-trip latency in a browser — there's no way around that with any " +
+      "web app, on any platform. If your audio interface has a \"direct monitor\" knob or switch, use it: it " +
+      "routes your instrument straight to your headphones in hardware, bypassing your device entirely for " +
+      "near-zero latency. If you do, turn the in-app Monitor off too, or you'll hear two slightly-delayed " +
+      "copies of yourself at once (a phasey/echo sound). Otherwise, use the latency compensation slider below " +
+      "to keep the click and playback feeling in time with what you hear of yourself.",
   ]);
 
   const body = el("div", { class: "settings-body" }, [

@@ -67,7 +67,12 @@ export class AudioEngine {
 
   constructor(store: LooperStore) {
     this.store = store;
-    this.audioContext = new AudioContext({ latencyHint: "interactive" });
+    // `0` explicitly asks for the lowest latency the platform can provide -
+    // per spec this is distinct from the `'interactive'` preset (which maps
+    // to a fixed internal target), and can resolve to a smaller output
+    // buffer than that preset on some browser/OS audio backends. Worst case
+    // it just clamps to the same floor 'interactive' would have anyway.
+    this.audioContext = new AudioContext({ latencyHint: 0 });
     this.scheduler = new Scheduler(this.audioContext);
     this.scheduler.start();
 
