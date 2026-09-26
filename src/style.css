@@ -411,19 +411,31 @@ input[type="range"]::-moz-range-thumb {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap; /* let a wide control (e.g. the input-device picker) drop to its own line instead of overflowing */
+  gap: 8px 12px;
   min-height: var(--touch);
 }
 
 .settings-row label {
   font-size: 0.9rem;
   color: var(--text-dim);
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 140px;
+}
+
+/* Multi-part controls (select + button, etc.) get the full row once wrapped,
+   and shrink/wrap internally rather than forcing horizontal overflow. */
+.settings-row .inline-controls,
+.settings-row .segmented {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-end;
 }
 
 .inline-controls {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -435,6 +447,9 @@ input[type="range"]::-moz-range-thumb {
 
 .settings-body select {
   min-height: var(--touch);
+  min-width: 0; /* flex items default to min-width:auto, which blocks shrinking and causes overflow */
+  max-width: 100%;
+  flex: 1 1 auto;
   font-size: 1rem; /* >=16px avoids iOS auto-zoom-on-focus */
   padding: 8px 10px;
   background: transparent;
@@ -451,6 +466,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .segment-btn {
+  flex: 1; /* evenly split the segmented control's full width, including when it stretches on mobile */
   padding: 10px 14px;
   min-height: var(--touch);
   border: none;
@@ -585,6 +601,20 @@ input[type="range"]::-moz-range-thumb {
 
   .mixer-name {
     min-width: 100%;
+  }
+
+  /* Rows with a wide control (input device picker, segmented toggle) read
+     better stacked - label on its own line, control spanning full width -
+     than wrapped mid-row. */
+  .settings-row:has(.inline-controls),
+  .settings-row:has(.segmented) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .settings-row .inline-controls,
+  .settings-row .segmented {
+    justify-content: stretch;
   }
 
   .mixer-volume {
