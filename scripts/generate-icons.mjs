@@ -11,8 +11,8 @@ import { mkdirSync } from "node:fs";
 const OUT_DIR = new URL("../public/icons/", import.meta.url);
 mkdirSync(OUT_DIR, { recursive: true });
 
-const BG = [0x11, 0x14, 0x1a]; // near-black
-const RING = [0xff, 0x6a, 0x1a]; // orange accent (matches "overdubbing" state color)
+const BG = [0x00, 0x00, 0x00]; // pure black
+const RING = [0xff, 0x2d, 0x95]; // hot pink accent
 
 /** @param {number} size @param {boolean} maskable */
 function renderIcon(size, maskable) {

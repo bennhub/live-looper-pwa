@@ -19,8 +19,8 @@ export default defineConfig({
         orientation: "any",
         start_url: "/",
         scope: "/",
-        theme_color: "#11141a",
-        background_color: "#11141a",
+        theme_color: "#000000",
+        background_color: "#000000",
         categories: ["music"],
         icons: [
           { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
