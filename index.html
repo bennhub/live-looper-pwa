@@ -7,6 +7,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="A live looper pedal for guitar and other instruments, running entirely in your browser." />
+    <!-- iOS-specific "Add to Home Screen" behavior - Safari only reads the
+         web manifest partially, these fill the gaps: launch full-screen with
+         no Safari chrome, a translucent black status bar matching our dark
+         theme (safe-area padding in style.css already accounts for it), and
+         a clean name instead of deriving one from the page. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Looper" />
     <title>Live Looper</title>
   </head>
   <body>
