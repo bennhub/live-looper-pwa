@@ -76,7 +76,10 @@ export const DEFAULT_SETTINGS: Settings = {
   latencyCompensationMs: 0,
   countInEnabled: true,
   countInBars: 1,
-  keepMetronomeOn: false,
+  // Continuous through recording/playback by default - the main-page
+  // Metronome toggle is expected to mean "always audible" for most users;
+  // "count-in only" is the opt-out, in Settings.
+  keepMetronomeOn: true,
   metronomeEnabled: true,
   metronomeVolume: 0.6,
   monitorEnabled: true,

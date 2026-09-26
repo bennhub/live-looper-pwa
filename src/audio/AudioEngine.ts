@@ -170,7 +170,7 @@ export class AudioEngine {
     await this.ensureInputConnected();
     const state = this.store.getState();
 
-    const { bpm, timeSignature, countInEnabled, countInBars, loopMode, bars } = state.settings;
+    const { bpm, timeSignature, countInEnabled, countInBars, loopMode, bars, metronomeEnabled } = state.settings;
     const beatsPerBar = timeSignature.beatsPerBar;
     const secPerBeat = secondsPerBeat(bpm);
     const sampleRate = this.audioContext.sampleRate;
@@ -184,7 +184,13 @@ export class AudioEngine {
       for (let i = 0; i < totalBeats; i++) {
         const t = epoch + i * secPerBeat;
         const isDownbeat = i % beatsPerBar === 0;
-        this.scheduler.scheduleAt(t, (time) => this.metronome.playClick(time, isDownbeat));
+        // Count-in timing always happens (recording must still start on the
+        // beat after it), but the click itself respects the master
+        // metronome mute - toggling "Metronome: Off" should silence
+        // everything, count-in included, not just playback/recording clicks.
+        if (metronomeEnabled) {
+          this.scheduler.scheduleAt(t, (time) => this.metronome.playClick(time, isDownbeat));
+        }
       }
       recordStartTime = epoch + totalBeats * secPerBeat;
     }
