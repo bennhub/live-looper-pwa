@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "live-looper-pwa",
+  "account_id": "cf7d06f5ce923e2ea2b13965a3aa8de0",
+  "compatibility_date": "2026-09-26",
+  // Pure static-assets Worker - no server-side code. Everything (audio
+  // engine, state, persistence) runs client-side already; the Worker just
+  // serves the built app shell (including the service worker and the
+  // AudioWorklet file) with no custom fetch handler needed.
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [
+    {
+      "pattern": "looper.mindbase.ca",
+      "custom_domain": true
+    }
+  ]
+}
