@@ -79,11 +79,6 @@ export function createSettingsPanel(engine: AudioEngine, store: LooperStore): Se
     store.updateSettings({ countInBars: Number(countInBarsSelect.value) });
   });
 
-  const keepMetronomeToggle = el("button", { class: "control-btn small toggle", type: "button" }, ["Off"]);
-  keepMetronomeToggle.addEventListener("click", () => {
-    engine.setKeepMetronomeOn(!store.getState().settings.keepMetronomeOn);
-  });
-
   const metronomeVolume = el("input", { type: "range", min: "0", max: "1", step: "0.01" }) as HTMLInputElement;
   metronomeVolume.addEventListener("input", () => engine.setMetronomeVolume(Number(metronomeVolume.value)));
 
@@ -177,7 +172,6 @@ export function createSettingsPanel(engine: AudioEngine, store: LooperStore): Se
     el("h3", {}, ["Count-in & Metronome"]),
     row("Count-in", countInToggle),
     row("Count-in length", countInBarsSelect),
-    row("Keep metronome on during recording/playback", keepMetronomeToggle),
     row("Metronome volume", metronomeVolume),
 
     el("h3", {}, ["Overdub"]),
@@ -218,8 +212,6 @@ export function createSettingsPanel(engine: AudioEngine, store: LooperStore): Se
     countInBarsSelect.value = String(s.countInBars);
     setDisabled(countInBarsSelect, !s.countInEnabled);
 
-    setText(keepMetronomeToggle, s.keepMetronomeOn ? "On" : "Off");
-    toggleClass(keepMetronomeToggle, "active", s.keepMetronomeOn);
     metronomeVolume.value = String(s.metronomeVolume);
 
     toggleClass(deferredBtn, "active", s.overdubTrigger === "deferred");

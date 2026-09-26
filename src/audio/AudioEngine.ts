@@ -146,10 +146,6 @@ export class AudioEngine {
     this.store.updateSettings({ metronomeEnabled: enabled });
   }
 
-  setKeepMetronomeOn(enabled: boolean): void {
-    this.store.updateSettings({ keepMetronomeOn: enabled });
-  }
-
   /** Records a tap and, once enough taps exist, updates BPM going forward. */
   tapTempo(): void {
     const bpm = this.tapTempoTracker.recordTap(performance.now());
@@ -292,7 +288,7 @@ export class AudioEngine {
 
   private onBeatTick(time: number, cycleIndex: number): void {
     const state = this.store.getState();
-    if (!state.settings.metronomeEnabled || !state.settings.keepMetronomeOn) return;
+    if (!state.settings.metronomeEnabled) return;
     if (state.transport === "idle" || state.transport === "count-in") return;
     const beatsPerBar = state.settings.timeSignature.beatsPerBar;
     this.metronome.playClick(time, cycleIndex % beatsPerBar === 0);

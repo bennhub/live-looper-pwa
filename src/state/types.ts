@@ -39,8 +39,7 @@ export interface Settings {
   latencyCompensationMs: number;
   countInEnabled: boolean;
   countInBars: number; // 1 or 2
-  keepMetronomeOn: boolean; // continue past count-in, through recording+playback
-  metronomeEnabled: boolean;
+  metronomeEnabled: boolean; // single on/off: count-in + recording + playback clicks
   metronomeVolume: number; // 0..1
   monitorEnabled: boolean;
   monitorVolume: number; // 0..1
@@ -76,10 +75,6 @@ export const DEFAULT_SETTINGS: Settings = {
   latencyCompensationMs: 0,
   countInEnabled: true,
   countInBars: 1,
-  // Continuous through recording/playback by default - the main-page
-  // Metronome toggle is expected to mean "always audible" for most users;
-  // "count-in only" is the opt-out, in Settings.
-  keepMetronomeOn: true,
   metronomeEnabled: true,
   metronomeVolume: 0.6,
   monitorEnabled: true,
