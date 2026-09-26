@@ -27,6 +27,11 @@ function wrapSeconds(t: number, period: number): number {
   return ((t % period) + period) % period;
 }
 
+// Small scheduling headroom used whenever we (re)anchor loop playback to
+// "right now" - gives the audio graph a moment to actually schedule the
+// source before its start time arrives.
+const LOOP_START_LEAD_SECONDS = 0.05;
+
 export interface TimelineInfo {
   bar: number;
   totalBars: number;
@@ -208,7 +213,7 @@ export class AudioEngine {
     this.scheduler.scheduleAt(recordStartTime, () => this.store.setTransport("recording"));
 
     const { samples } = await capturePromise;
-    this.commitBaseLayer(samples, recordStartTime);
+    this.commitBaseLayer(samples);
   }
 
   /** Manual stop for Free Loop Mode recording (Fixed Bar Mode auto-stops). */
@@ -234,7 +239,7 @@ export class AudioEngine {
     this.store.setTransport("idle");
   }
 
-  private commitBaseLayer(rawSamples: Float32Array<ArrayBuffer>, startTime: number): void {
+  private commitBaseLayer(rawSamples: Float32Array<ArrayBuffer>): void {
     const state = this.store.getState();
     const sampleRate = this.audioContext.sampleRate;
     const { loopMode, quantize, bpm, timeSignature, bars, latencyCompensationMs } = state.settings;
@@ -268,7 +273,15 @@ export class AudioEngine {
     this.store.addLayer(layer);
     this.createVoiceForLayer(layer);
 
-    this.loopEpoch = startTime;
+    // Anchor playback to "right now", not to the original recordStartTime +
+    // masterFrames. Those only coincide when masterFrames exactly equals the
+    // real elapsed capture time - true for Fixed Bar mode and unquantized
+    // Free mode, but NOT for quantized Free mode, where the loop length is
+    // deliberately rounded to the nearest beat and can end up shorter than
+    // how long was actually recorded. In that case the old "epoch stays in
+    // the past" approach made the scheduler think a full extra cycle had
+    // already elapsed, delaying first playback by a whole loop length.
+    this.loopEpoch = this.audioContext.currentTime + LOOP_START_LEAD_SECONDS;
     this.store.setTransport("playing");
     this.startLoopPlayback();
   }
@@ -343,7 +356,7 @@ export class AudioEngine {
     if (state.transport !== "stopped" || state.masterLoopFrames === null) return;
     await this.ensureResumed();
     await this.ensureInputConnected();
-    this.loopEpoch = this.audioContext.currentTime + 0.05;
+    this.loopEpoch = this.audioContext.currentTime + LOOP_START_LEAD_SECONDS;
     this.store.setTransport("playing");
     this.startLoopPlayback();
   }
