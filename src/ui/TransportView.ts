@@ -42,6 +42,7 @@ export function createTransportView(engine: AudioEngine, store: LooperStore): HT
   const root = el("section", { class: "transport" });
 
   const statusChip = el("div", { class: "status-chip" }, ["IDLE"]);
+  const bpmDisplay = el("div", { class: "bpm-display" }, ["100 BPM"]);
   const barBeat = el("div", { class: "bar-beat" }, ["BAR – / –  ·  BEAT – / –"]);
   const progressFill = el("div", { class: "loop-progress-fill" });
   const progress = el("div", { class: "loop-progress" }, [progressFill]);
@@ -59,7 +60,7 @@ export function createTransportView(engine: AudioEngine, store: LooperStore): HT
   const controls = el("div", { class: "controls-row" }, [overdubBtn, undoBtn, clearBtn]);
   const toggles = el("div", { class: "controls-row" }, [monitorBtn, metronomeBtn]);
 
-  root.append(statusChip, barBeat, progress, primaryBtn, controls, toggles, levelMeter);
+  root.append(statusChip, bpmDisplay, barBeat, progress, primaryBtn, controls, toggles, levelMeter);
 
   primaryBtn.addEventListener("click", () => {
     runCatching(
@@ -87,6 +88,7 @@ export function createTransportView(engine: AudioEngine, store: LooperStore): HT
     const state = store.getState();
     setText(statusChip, STATE_LABELS[state.transport]);
     root.dataset.state = state.transport;
+    setText(bpmDisplay, `${state.settings.bpm} BPM`);
 
     const action = primaryActionFor(state.transport);
     setText(primaryBtn, action?.label ?? "…");

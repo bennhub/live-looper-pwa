@@ -127,6 +127,14 @@ input {
   color: var(--color-stopped);
 }
 
+.bpm-display {
+  font-variant-numeric: tabular-nums;
+  color: var(--pink);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
 .bar-beat {
   font-variant-numeric: tabular-nums;
   color: var(--text-dim);
