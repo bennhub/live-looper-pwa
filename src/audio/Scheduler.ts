@@ -7,6 +7,24 @@
 const TICK_INTERVAL_MS = 25;
 const LOOKAHEAD_SECONDS = 0.1;
 
+// Absorbs the few ms of real event-loop/microtask delay between a cycle
+// boundary actually occurring and PeriodicScheduler.start() running for it
+// (e.g. right after a base-loop recording's capture completes exactly one
+// period after its epoch). Without this, `nextCycleIndex` rounds a tiny
+// positive overshoot UP via ceil() and skips an entire extra cycle before
+// anything is audible - a full silent loop before playback ever starts.
+const START_TOLERANCE_SECONDS = 0.05;
+
+/**
+ * Which cycle index should fire next, given how far past `epoch` `currentTime`
+ * already is. Exported (pure, no AudioContext needed) so the exact-boundary
+ * rounding behavior is unit-testable on its own.
+ */
+export function nextCycleIndex(currentTime: number, epoch: number, periodSeconds: number): number {
+  const elapsed = currentTime - epoch - START_TOLERANCE_SECONDS;
+  return Math.max(0, Math.ceil(elapsed / periodSeconds));
+}
+
 interface PendingEvent {
   time: number;
   callback: (time: number) => void;
@@ -101,7 +119,7 @@ export class PeriodicScheduler {
 
   /** (Re)starts emission from the first cycle at/after AudioContext.currentTime. */
   start(): void {
-    this.nextIndex = Math.max(0, Math.ceil((this.scheduler.currentTime - this.epoch) / this.periodSeconds));
+    this.nextIndex = nextCycleIndex(this.scheduler.currentTime, this.epoch, this.periodSeconds);
     this.unregister?.();
     this.unregister = this.scheduler.onTick(() => this.refill());
     this.refill();
