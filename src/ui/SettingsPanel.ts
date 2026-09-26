@@ -90,7 +90,7 @@ export function createSettingsPanel(engine: AudioEngine, store: LooperStore): Se
   immediateBtn.addEventListener("click", () => store.updateSettings({ overdubTrigger: "immediate" }));
 
   // --- Latency ---
-  const latencySlider = el("input", { type: "range", min: "-100", max: "100", step: "1" }) as HTMLInputElement;
+  const latencySlider = el("input", { type: "range", min: "-50", max: "300", step: "1" }) as HTMLInputElement;
   const latencyValue = el("span", {}, ["0 ms"]);
   latencySlider.addEventListener("input", () => {
     store.updateSettings({ latencyCompensationMs: Number(latencySlider.value) });
@@ -176,7 +176,15 @@ export function createSettingsPanel(engine: AudioEngine, store: LooperStore): Se
 
     el("h3", {}, ["Overdub"]),
     row("Overdub trigger", overdubSeg),
-    row("Latency compensation", el("div", { class: "inline-controls" }, [latencySlider, latencyValue])),
+
+    el("h3", {}, ["Monitor & Recording Sync"]),
+    row("Latency compensation (ms)", el("div", { class: "inline-controls" }, [latencySlider, latencyValue])),
+    el("p", { class: "limitations-note" }, [
+      "Set this to roughly your monitor's round-trip latency. It delays the metronome click and loop " +
+        "playback to match what you hear of your own live-monitored playing (so the click doesn't feel " +
+        "like it's racing ahead), and shifts newly recorded/overdubbed audio to compensate for the same " +
+        "delay. Dial it in by ear: play along with the click, increase until it feels tight.",
+    ]),
 
     el("h3", {}, ["Input & Monitoring"]),
     row("Input device", el("div", { class: "inline-controls" }, [deviceSelect, refreshDevicesBtn])),

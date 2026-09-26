@@ -200,7 +200,9 @@ export class AudioEngine {
         // Count-in click is unconditional - it's the cueing sound for count-in
         // itself, independent of the main Metronome toggle (which instead
         // governs whether a click plays during the recording/overdub pass).
-        this.scheduler.scheduleAt(t, (time) => this.metronome.playClick(time, isDownbeat));
+        // `t` itself (used below for recordStartTime) stays on the true grid -
+        // only the audible click is nudged for monitor-sync, matching onBeatTick.
+        this.scheduler.scheduleAt(t, (time) => this.metronome.playClick(time + this.monitorSyncSeconds, isDownbeat));
       }
       recordStartTime = epoch + totalBeats * secPerBeat;
     }
@@ -331,9 +333,29 @@ export class AudioEngine {
     this.beatPeriodicEpoch = epoch;
   }
 
+  /**
+   * Seconds to delay every AUDIBLE-only sound (metronome clicks, loop
+   * playback) by, so they line up with what the user actually hears of
+   * their own live-monitored playing. The live monitor path has real
+   * round-trip latency (capture buffering + output buffering) that a
+   * synthesized click or a played-back buffer simply doesn't have, which
+   * otherwise makes the click/loop feel like it's racing ahead. Delaying
+   * the synthetic side by the same amount fixes the perceptual sync -
+   * reusing the existing "Latency compensation" setting, since the value
+   * a user dials in by ear (their monitor's round-trip latency) is exactly
+   * what both this and the recording-alignment rotation need. This never
+   * touches the canonical scheduling clock (loopEpoch, cycle indices,
+   * capture arm/stop frames) - only how much later the sound actually
+   * starts once told to play, so it can't introduce drift or gaps.
+   */
+  private get monitorSyncSeconds(): number {
+    return this.store.getState().settings.latencyCompensationMs / 1000;
+  }
+
   private onLoopCycle(time: number): void {
+    const delayedTime = time + this.monitorSyncSeconds;
     for (const layer of this.store.getState().layers) {
-      this.layerVoices.get(layer.id)?.scheduleCycle(layer.buffer, time);
+      this.layerVoices.get(layer.id)?.scheduleCycle(layer.buffer, delayedTime);
     }
   }
 
@@ -347,7 +369,7 @@ export class AudioEngine {
     // in record()) and isn't gated here at all.
     if (state.transport !== "recording" && state.transport !== "overdubbing") return;
     const beatsPerBar = state.settings.timeSignature.beatsPerBar;
-    this.metronome.playClick(time, cycleIndex % beatsPerBar === 0);
+    this.metronome.playClick(time + this.monitorSyncSeconds, cycleIndex % beatsPerBar === 0);
   }
 
   /** playing -> stopped (pause; layers and settings are untouched). */
@@ -437,7 +459,9 @@ export class AudioEngine {
     // Splice in immediately rather than waiting up to one full loop for the
     // next onLoopCycle - subsequent cycles then keep it in sync automatically.
     if ((state.transport === "playing" || state.transport === "overdubbing") && this.loopEpoch !== null) {
-      voice.scheduleCycle(layer.buffer, this.audioContext.currentTime + 0.02);
+      // Include the same monitor-sync delay as onLoopCycle, or this first
+      // splice-in would play slightly ahead of every cycle after it.
+      voice.scheduleCycle(layer.buffer, this.audioContext.currentTime + 0.02 + this.monitorSyncSeconds);
     }
   }
 
