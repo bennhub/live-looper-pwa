@@ -167,7 +167,7 @@ export class AudioEngine {
     await this.ensureInputConnected();
     const state = this.store.getState();
 
-    const { bpm, timeSignature, countInEnabled, countInBars, loopMode, bars, metronomeEnabled } = state.settings;
+    const { bpm, timeSignature, countInEnabled, countInBars, loopMode, bars } = state.settings;
     const beatsPerBar = timeSignature.beatsPerBar;
     const secPerBeat = secondsPerBeat(bpm);
     const sampleRate = this.audioContext.sampleRate;
@@ -181,13 +181,10 @@ export class AudioEngine {
       for (let i = 0; i < totalBeats; i++) {
         const t = epoch + i * secPerBeat;
         const isDownbeat = i % beatsPerBar === 0;
-        // Count-in timing always happens (recording must still start on the
-        // beat after it), but the click itself respects the master
-        // metronome mute - toggling "Metronome: Off" should silence
-        // everything, count-in included, not just playback/recording clicks.
-        if (metronomeEnabled) {
-          this.scheduler.scheduleAt(t, (time) => this.metronome.playClick(time, isDownbeat));
-        }
+        // Count-in click is unconditional - it's the cueing sound for count-in
+        // itself, independent of the main Metronome toggle (which instead
+        // governs whether a click plays during the recording/overdub pass).
+        this.scheduler.scheduleAt(t, (time) => this.metronome.playClick(time, isDownbeat));
       }
       recordStartTime = epoch + totalBeats * secPerBeat;
     }
@@ -195,8 +192,9 @@ export class AudioEngine {
     // Metronome clicks must keep going through the recording itself, not
     // just count-in - start the beat scheduler now, anchored at
     // recordStartTime (the same epoch loop playback will use once the take
-    // commits), so there's no gap between count-in ending and playback
-    // starting. onBeatTick() re-checks metronomeEnabled live on every tick.
+    // commits), so there's no gap between count-in ending and the recording
+    // pass starting. onBeatTick() gates the actual click on metronomeEnabled
+    // and on being in an active capture state, live, on every tick.
     this.ensureBeatPeriodic(recordStartTime, bpm);
 
     let stopFrame: number | null = null;
@@ -318,7 +316,12 @@ export class AudioEngine {
   private onBeatTick(time: number, cycleIndex: number): void {
     const state = this.store.getState();
     if (!state.settings.metronomeEnabled) return;
-    if (state.transport === "idle" || state.transport === "count-in") return;
+    // The metronome is a recording aid, not a permanent click track: it
+    // plays during the base take and during an overdub pass, and goes
+    // silent again as soon as that pass ends and the loop is just playing
+    // back - count-in's own click is handled separately (unconditional,
+    // in record()) and isn't gated here at all.
+    if (state.transport !== "recording" && state.transport !== "overdubbing") return;
     const beatsPerBar = state.settings.timeSignature.beatsPerBar;
     this.metronome.playClick(time, cycleIndex % beatsPerBar === 0);
   }
