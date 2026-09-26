@@ -54,6 +54,7 @@ export class AudioEngine {
   private readonly layerVoices = new Map<string, LayerVoice>();
   private loopPeriodic: PeriodicScheduler | null = null;
   private beatPeriodic: PeriodicScheduler | null = null;
+  private beatPeriodicEpoch: number | null = null;
   private loopEpoch: number | null = null;
   private readonly tapTempoTracker = new TapTempo();
   private readonly store: LooperStore;
@@ -191,6 +192,13 @@ export class AudioEngine {
       recordStartTime = epoch + totalBeats * secPerBeat;
     }
 
+    // Metronome clicks must keep going through the recording itself, not
+    // just count-in - start the beat scheduler now, anchored at
+    // recordStartTime (the same epoch loop playback will use once the take
+    // commits), so there's no gap between count-in ending and playback
+    // starting. onBeatTick() re-checks metronomeEnabled live on every tick.
+    this.ensureBeatPeriodic(recordStartTime, bpm);
+
     let stopFrame: number | null = null;
     if (loopMode === "fixed-bar") {
       const frames = barsToFrames(bpm, beatsPerBar, bars, sampleRate);
@@ -217,7 +225,13 @@ export class AudioEngine {
   cancelRecording(): void {
     const state = this.store.getState();
     if (state.transport !== "count-in" && state.transport !== "recording") return;
-    this.scheduler.clear(); // safe: no loop/metronome cycles exist yet at this point
+    this.scheduler.clear(); // safe: no loop-restart cycles exist yet at this point
+    // The beat-click scheduler is running by now (started in record() so
+    // clicks continue through recording) - .clear() only drops already-queued
+    // one-off events, not its onTick refill hook, so it must be stopped
+    // explicitly or it would keep clicking forever after a cancelled take.
+    this.beatPeriodic?.stop();
+    this.beatPeriodicEpoch = null;
     this.recorder?.cancel();
     this.store.setTransport("idle");
   }
@@ -272,12 +286,27 @@ export class AudioEngine {
     );
     this.loopPeriodic.start();
 
+    this.ensureBeatPeriodic(this.loopEpoch, state.settings.bpm);
+  }
+
+  /**
+   * (Re)anchors the beat-click scheduler only when actually needed. Called
+   * from both `record()` (so clicks continue through the recording itself)
+   * and `startLoopPlayback()` (same epoch once the take commits, or a fresh
+   * one when resuming from `stopped`) - a no-op when the epoch hasn't
+   * changed, so the record()->commit transition doesn't stop-and-recreate a
+   * scheduler that's already correctly anchored, which previously caused a
+   * doubled click at that exact boundary (the old instance's already-queued
+   * one-off event fired alongside the new instance's re-scheduled one).
+   */
+  private ensureBeatPeriodic(epoch: number, bpm: number): void {
+    if (this.beatPeriodic && this.beatPeriodicEpoch === epoch) return;
     this.beatPeriodic?.stop();
-    const secPerBeat = secondsPerBeat(state.settings.bpm);
-    this.beatPeriodic = new PeriodicScheduler(this.scheduler, this.loopEpoch, secPerBeat, (time, cycleIndex) =>
+    this.beatPeriodic = new PeriodicScheduler(this.scheduler, epoch, secondsPerBeat(bpm), (time, cycleIndex) =>
       this.onBeatTick(time, cycleIndex),
     );
     this.beatPeriodic.start();
+    this.beatPeriodicEpoch = epoch;
   }
 
   private onLoopCycle(time: number): void {
@@ -300,6 +329,7 @@ export class AudioEngine {
     if (state.transport !== "playing") return;
     this.loopPeriodic?.stop();
     this.beatPeriodic?.stop();
+    this.beatPeriodicEpoch = null;
     for (const voice of this.layerVoices.values()) voice.stopImmediately();
     this.store.setTransport("stopped");
   }
@@ -453,6 +483,7 @@ export class AudioEngine {
   clearLoop(): void {
     this.loopPeriodic?.stop();
     this.beatPeriodic?.stop();
+    this.beatPeriodicEpoch = null;
     for (const voice of this.layerVoices.values()) voice.dispose();
     this.layerVoices.clear();
     this.loopEpoch = null;
