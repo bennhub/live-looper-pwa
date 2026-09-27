@@ -90,7 +90,7 @@ export function createSettingsPanel(engine: AudioEngine, store: LooperStore): Se
   immediateBtn.addEventListener("click", () => store.updateSettings({ overdubTrigger: "immediate" }));
 
   // --- Latency ---
-  const latencySlider = el("input", { type: "range", min: "-50", max: "300", step: "1" }) as HTMLInputElement;
+  const latencySlider = el("input", { type: "range", min: "-100", max: "800", step: "1" }) as HTMLInputElement;
   const latencyValue = el("span", {}, ["0 ms"]);
   latencySlider.addEventListener("input", () => {
     store.updateSettings({ latencyCompensationMs: Number(latencySlider.value) });
@@ -153,12 +153,8 @@ export function createSettingsPanel(engine: AudioEngine, store: LooperStore): Se
   });
 
   const limitationsNote = el("p", { class: "limitations-note" }, [
-    "Live monitoring always has some round-trip latency in a browser — there's no way around that with any " +
-      "web app, on any platform. If your audio interface has a \"direct monitor\" knob or switch, use it: it " +
-      "routes your instrument straight to your headphones in hardware, bypassing your device entirely for " +
-      "near-zero latency. If you do, turn the in-app Monitor off too, or you'll hear two slightly-delayed " +
-      "copies of yourself at once (a phasey/echo sound). Otherwise, use the latency compensation slider below " +
-      "to keep the click and playback feeling in time with what you hear of yourself.",
+    "Browser monitoring always has some latency — for near-zero delay, use your interface's own \"direct monitor\" switch instead. " +
+      "If you do, turn this app's Monitor off too, or you'll hear an echoey double.",
   ]);
 
   const body = el("div", { class: "settings-body" }, [
@@ -182,10 +178,8 @@ export function createSettingsPanel(engine: AudioEngine, store: LooperStore): Se
     el("h3", {}, ["Monitor & Recording Sync"]),
     row("Latency compensation (ms)", el("div", { class: "inline-controls" }, [latencySlider, latencyValue])),
     el("p", { class: "limitations-note" }, [
-      "Set this to roughly your monitor's round-trip latency. It delays the metronome click and loop " +
-        "playback to match what you hear of your own live-monitored playing (so the click doesn't feel " +
-        "like it's racing ahead), and shifts newly recorded/overdubbed audio to compensate for the same " +
-        "delay. Dial it in by ear: play along with the click, increase until it feels tight.",
+      "Delays the click/loop and shifts new recordings to match your monitor's latency. " +
+        "Play along with the click and increase until it feels tight.",
     ]),
 
     el("h3", {}, ["Input & Monitoring"]),
