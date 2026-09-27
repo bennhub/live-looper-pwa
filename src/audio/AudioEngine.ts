@@ -16,6 +16,7 @@ import {
 } from "./quantize";
 import { rampGain } from "./gainRamp";
 import { applyLatencyCompensation } from "./latency";
+import { applyLoopSeamFade } from "./loopSeam";
 
 function nextLayerId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -273,9 +274,10 @@ export class AudioEngine {
 
     const fitted = fitToLength(rawSamples, masterFrames);
     const aligned = applyLatencyCompensation(fitted, 0, latencyCompensationMs, sampleRate);
+    const seamed = applyLoopSeamFade(aligned, sampleRate);
 
     const buffer = this.audioContext.createBuffer(1, masterFrames, sampleRate);
-    buffer.copyToChannel(aligned, 0);
+    buffer.copyToChannel(seamed, 0);
 
     const layer: Layer = {
       id: nextLayerId(),
@@ -438,9 +440,10 @@ export class AudioEngine {
     const masterFrames = state.masterLoopFrames!;
     const fitted = fitToLength(rawSamples, masterFrames);
     const aligned = applyLatencyCompensation(fitted, rotationOffsetFrames, state.settings.latencyCompensationMs, sampleRate);
+    const seamed = applyLoopSeamFade(aligned, sampleRate);
 
     const buffer = this.audioContext.createBuffer(1, masterFrames, sampleRate);
-    buffer.copyToChannel(aligned, 0);
+    buffer.copyToChannel(seamed, 0);
 
     const layer: Layer = {
       id: nextLayerId(),
